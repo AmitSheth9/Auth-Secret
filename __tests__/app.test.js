@@ -79,4 +79,17 @@ describe('backend routes', () => {
       createdAt: expect.any(String)
     });
   });
+  it('allows logged in user to get all secrets', async () => {
+    const [agent, user] = await registerAndLogin();
+    await agent.post('/api/v1/secrets').send(mockSecret);
+    const res = await agent.get('/api/v1/secrets');
+
+    expect(res.body).toEqual([
+      { id: expect.any(String),
+        userId: expect.any(String),
+        title: 'secret',
+        description: 'top secret',
+        createdAt: expect.any(String)
+      }]);
+  });
 });
