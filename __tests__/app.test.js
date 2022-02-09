@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
 const pool = require('../lib/utils/pool');
 const setup = require('../data/setup');
@@ -8,6 +9,11 @@ const UserService = require('../lib/services/UserService');
 const mockUser = {
   email: 'mock',
   password: 'pass',
+};
+
+const mockSecret = {
+  title: 'secret',
+  description: 'top secret',
 };
 
 const registerAndLogin = async (userProps = {}) => {
@@ -59,6 +65,18 @@ describe('backend routes', () => {
     expect(res.body).toEqual({ 
       success: true,
       message: 'Signed Out',
+    });
+  });
+  it('allows logged in user to post secret', async() => {
+    const [agent, user] = await registerAndLogin();
+    const res = await agent.post('/api/v1/secrets').send(mockSecret);
+
+    expect(res.body).toEqual({
+      id: expect.any(String),
+      userId: expect.any(String),
+      title: 'secret',
+      description: 'top secret',
+      createdAt: expect.any(String)
     });
   });
 });
