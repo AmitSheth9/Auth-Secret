@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const pool = require('../lib/utils/pool');
 const setup = require('../data/setup');
 const request = require('supertest');
@@ -10,11 +11,17 @@ const mockUser = {
 };
 
 const registerAndLogin = async (userProps = {}) => {
+  const agent = request.agent(app);
   const password = userProps.password ?? mockUser.password;
 
-  const agent = request.agent(app);
 
   const user = await UserService.create({ ...mockUser, ...userProps });
+  
+  const { email } = user;
+  await agent.post('/api/v1/users/sessions').send({ email, password });
+
+
+  return [agent, user];
 };
 
 
@@ -37,14 +44,21 @@ describe('backend routes', () => {
       email
     });
   });
-  it('returns current user', async() => {
+  it('logs user in', async() => {
     const [agent, user] = await registerAndLogin();
-    const me = await agent.get('/api/v1/users/me');
+    const res = await agent.post('/api/v1/users/sessions').send(mockUser);
 
-    expect(me.body).toEqual({
-      ...user,
-      exp: expect.any(Number),
-      iat: expect.any(Number),
+    expect(res.body).toEqual({
+      message: 'Sign in Succesful!'
+    });
+  });
+  it('it logs user out', async() => {
+    const [agent, user] = await registerAndLogin();
+    const res = await agent.delete('/api/v1/users/sessions');
+
+    expect(res.body).toEqual({ 
+      success: true,
+      message: 'Signed Out',
     });
   });
 });
